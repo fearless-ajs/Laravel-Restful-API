@@ -16,9 +16,7 @@ class UserController extends ApiController
     public function index()
     {
         $users = User::all();
-        return response()->json([
-           'data' => $users
-        ], 200);
+        return $this->showAll($users);
     }
 
     /**
@@ -50,35 +48,30 @@ class UserController extends ApiController
         $user  = User::create($data);
 
         // Return response as json to the client
-        return response()->json([
-            'data' => $user
-        ], 201);
+        return $this->showOne($user, 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param User $user
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(User $user)
     {
-        $user = User::findOrFail($id);
-        return response()->json([
-            'data' => $user
-        ], 200);
+        return $this->showOne($user);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param User $user
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     * @throws \Illuminate\Validation\ValidationException
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
         $rules = [
             'name'    => 'string|max:255',
             'email'   => 'email|unique:users,' . $user->id, // Don't check the user with tha id
@@ -108,10 +101,7 @@ class UserController extends ApiController
         // If the admin field is supplied
         if ($request->has('admin')){
             if (!$user->isVerified()){
-                return response()->json([
-                    'error' => 'Only verified user can modify the admin field',
-                    'code'  => 409
-                ], 409);
+                return $this->errorResponse('Only verified user can modify the admin field', 409);
             }
             $user->admin = $request->admin;
         }
@@ -119,29 +109,23 @@ class UserController extends ApiController
         // Check if the model changed, i'e if the user changed something, supplied something different
         // to what is the database record
         if (!$user->isDirty()){
-            return response()->json([
-                'error' => 'You need to specify a different value to update',
-                'code'  => 422
-            ], 422);
+            return $this->errorResponse('You need to specify a different value to update', 422);
         }
 
         // Finally save the user's update
         $user->save();
         // Return response with the updated data
-        return response()->json([
-            'data' => $user
-        ], 200);
+        return $this->showOne($user);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param User $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($id);
         $user->delete();
 
         // Return response with the deleted data

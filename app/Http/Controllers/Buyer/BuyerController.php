@@ -16,23 +16,19 @@ class BuyerController extends ApiController
     public function index()
     {
         $buyers = Buyer::has('transactions')->get();
-        return response()->json([
-            'data' => $buyers
-        ], 200);
+        return $this->showAll($buyers);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param Buyer $buyer
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Buyer $buyer)
     {
-        $buyer = Buyer::has('transactions')->findOrFail($id);
-        return response()->json([
-            'data' => $buyer
-        ], 200);
+        // User global scope to return users with transactions only
+        return $this->showOne($buyer);
     }
 
 }

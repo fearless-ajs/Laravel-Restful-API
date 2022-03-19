@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignId('seller_id')->constrained('users');
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

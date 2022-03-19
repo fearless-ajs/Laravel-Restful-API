@@ -19,7 +19,9 @@ return new class extends Migration
             $table->foreignId('buyer_id')->constrained('users');
             $table->foreignId('product_id')->constrained('users');
             $table->timestamps();
+            $table->softDeletes();
         });
+
     }
 
     /**
