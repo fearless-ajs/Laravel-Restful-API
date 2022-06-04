@@ -10,7 +10,11 @@ use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Category\CategoryProductController;
 use App\Http\Controllers\Category\CategorySellerController;
 use App\Http\Controllers\Category\CategoryTransactionController;
+use App\Http\Controllers\Product\ProductBuyerController;
+use App\Http\Controllers\Product\ProductBuyerTransactionController;
+use App\Http\Controllers\Product\ProductCategoryController;
 use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\Product\ProductTransactionController;
 use App\Http\Controllers\Seller\SellerBuyerController;
 use App\Http\Controllers\Seller\SellerCategoryController;
 use App\Http\Controllers\Seller\SellerController;
@@ -55,6 +59,10 @@ Route::resource('categories.buyers', CategoryBuyerController::class, ['only' => 
  * Products
  */
 Route::resource('products', ProductController::class, ['only' => ['index', 'show']]);
+Route::resource('products.transactions', ProductTransactionController::class, ['only' => ['index']]);
+Route::resource('products.buyers', ProductBuyerController::class, ['only' => ['index']]);
+Route::resource('products.categories', ProductCategoryController::class, ['except' => ['create', 'store', 'edit', 'show']]);
+Route::resource('products.buyers.transactions', ProductBuyerTransactionController::class, ['only' => ['store']]);
 
 /*
  * Sellers
@@ -76,3 +84,5 @@ Route::resource('transactions.sellers', TransactionSellerController::class, ['on
  * Users
  */
 Route::resource('users', UserController::class, ['except' => ['create', 'edit']]);
+Route::get('/users/verify/{token}', [UserController::class, 'verify'])->name('verify');
+Route::get('/users/{user}/resend', [UserController::class, 'resend'])->name('resend');

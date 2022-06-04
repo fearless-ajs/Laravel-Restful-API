@@ -6,11 +6,19 @@ use App\Http\Controllers\ApiController;
 use App\Models\Product;
 use App\Models\Seller;
 use App\Models\User;
+use App\Transformers\ProductTransformer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class SellerProductController extends ApiController
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('transform.input:' . productTransformer::class)->only(['store', 'update']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -42,7 +50,7 @@ class SellerProductController extends ApiController
         $data = $request->all();
 
         $data['status'] = Product::UNAVAILABLE_PRODUCT;
-        $data['image'] = '1.jpg';
+        $data['image'] = $request->image->store('/', 'images');
         $data['seller_id']  = $seller->id;
 
         $product = Product::create($data);
@@ -101,6 +109,12 @@ class SellerProductController extends ApiController
             return $this->errorResponse('You need to specify a different value to update', 422);
         }
 
+        if ($request->hasFile('image')){
+            Storage::delete($product->image);
+
+            $request->image = $request->image->store('/', 'images');
+        }
+
         $product->save();
 
         return $this->showOne($product);
@@ -119,7 +133,7 @@ class SellerProductController extends ApiController
         // Check if the seller is the owner of the product
         $this->checkSeller($seller, $product);
         $product->delete();
-
+        Storage::delete($product->image);
         return $this->showOne($product);
     }
 

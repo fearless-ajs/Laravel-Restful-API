@@ -23,6 +23,12 @@ class DatabaseSeeder extends Seeder
         //category_product doesn't have a model, so we'll truncate the table directly
         DB::table('category_product')->truncate();
 
+        //Disable event listeners
+        User::flushEventListeners();
+        Category::flushEventListeners();
+        Product::flushEventListeners();
+        Transaction::flushEventListeners();
+
         $this->call(UserSeeder::class);
         $this->call(CategorySeeder::class);
         $this->call(ProductSeeder::class);

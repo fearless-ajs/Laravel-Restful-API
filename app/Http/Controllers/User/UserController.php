@@ -3,11 +3,20 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\ApiController;
+use App\Mail\UserCreated;
 use App\Models\User;
+use App\Transformers\UserTransformer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends ApiController
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('transform.input:' . UserTransformer::class)->only(['store', 'update']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -132,5 +141,30 @@ class UserController extends ApiController
         return response()->json([
             'data' => $user
         ], 200);
+    }
+
+
+    public function verify($token){
+        // firstOrFail() returns model not found defined in our exception handler if user not found
+        $user = User::where('verification_token', $token)->firstOrFail();
+
+        $user->verified = User::VERIFIED_USER;
+        $user->verification_token   = null;
+
+        $user->save();
+
+        return $this->showMessage('The account has been verified successfully');
+    }
+
+    public function resend(User $user){
+
+        if ($user->isVerified()){
+            return $this->errorResponse('This user is already verified', 409);
+        }
+
+        retry(5, function () use ($user) {
+            Mail::to($user->email)->send(new UserCreated($user));
+        });
+        return $this->showMessage('The verification email has been sent');
     }
 }
